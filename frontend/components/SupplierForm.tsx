@@ -1,71 +1,71 @@
 'use client';
 
 import { useState } from 'react';
-import { analyzeSupplier } from '../lib/api';
+import { analyzeSupplier } from '../lib/api'; // adjust path if needed
 
 interface SupplierFormProps {
-  onAnalysisComplete?: (data: any) => void;
+  onAnalysisComplete: (data: any) => void;
 }
 
 export default function SupplierForm({ onAnalysisComplete }: SupplierFormProps) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) return;
-
+    setError(null);
     setLoading(true);
-    setError('');
 
     try {
       const result = await analyzeSupplier(url);
-      onAnalysisComplete?.(result);
-      setUrl('');
-    } catch (err) {
-      setError('Failed to analyze supplier. Please try again.');
+
+      if (result.success && result.data) {
+        const normalizedData = {
+          supplier_name: result.data.company_name,
+          risk_score: result.data.analysis.sustainability_score * 10, // 0-10 to 0-100 scale
+          risk_level: result.data.analysis.risk_level,
+          factors: result.data.analysis.key_findings,
+          recommendations: result.data.analysis.recommendations,
+        };
+
+        onAnalysisComplete(normalizedData);
+      } else {
+        setError(result?.error || 'Analysis failed.');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Analyze Supplier
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-            Supplier Website URL
-          </label>
-          <input
-            type="url"
-            id="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example-supplier.com"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white placeholder-gray-500"
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+          Supplier Website URL
+        </label>
+        <input
+          type="url"
+          id="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://example.com"
+          required
+          className="mt-1 p-2 border border-gray-300 rounded w-full"
+        />
+      </div>
 
-        {error && (
-          <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
-            {error}
-          </div>
-        )}
+      {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading || !url.trim()}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Analyzing...' : 'Analyze Supplier'}
-        </button>
-      </form>
-    </div>
+      <button
+        type="submit"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded"
+        disabled={loading}
+      >
+        {loading ? 'Analyzing...' : 'Analyze'}
+      </button>
+    </form>
   );
 }
