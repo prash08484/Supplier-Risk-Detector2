@@ -1,0 +1,46 @@
+# Core LangGraph and LangChain dependencies
+langgraph>=0.2.16
+langchain>=0.2.16
+langchain-core>=0.2.39
+langchain-openai>=0.1.25
+
+# OpenAI API
+openai>=1.45.0
+
+# Web scraping and HTTP requests
+requests>=2.31.0
+firecrawl-py>=0.0.20  # Official Firecrawl Python SDK
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Async support
+asyncio>=3.4.3
+aiohttp>=3.9.0
+
+# Environment management
+python-dotenv>=1.0.0
+
+# Logging and monitoring
+structlog>=23.2.0
+
+# FastAPI integration (for your backend)
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# Database (if using Prisma as mentioned)
+prisma>=0.11.0
+
+# Utility libraries
+pydantic>=2.5.0
+typing-extensions>=4.8.0
+
+# Testing (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Development tools (optional)
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.7.0
