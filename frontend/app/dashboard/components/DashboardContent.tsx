@@ -7,9 +7,14 @@ import { UserButton } from '@clerk/nextjs';
 import { useState } from 'react';
 import Link from 'next/link';
 
+
 export default function DashboardContent() {
-  const [activeTab, setActiveTab] = useState('overview');
+
   const [analysisData, setAnalysisData] = useState<any>(null);
+  const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
+  
+  const [activeTab, setActiveTab] = useState('overview');
+  
 
   const riskMetrics = [
     { label: 'High Risk Suppliers', value: '12', change: '+2', color: 'text-red-600' },
@@ -27,8 +32,10 @@ export default function DashboardContent() {
 
   const handleAnalysisComplete = (data: any) => {
     setAnalysisData(data);
-    setActiveTab('risks'); // Switch to risk analysis tab
+    setAnalysisHistory((prev) => [data, ...prev]); // Keep latest first
+    setActiveTab('risks');
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,6 +114,27 @@ export default function DashboardContent() {
                   </div>
                 ))}
               </div>
+
+              {/* Latest Analyzed Suppliers */}
+              <div className="bg-white rounded-lg shadow-sm mt-8">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">Latest Analyzed Suppliers</h2>
+                </div>
+                <div className="p-6">
+                  <ul className="divide-y divide-gray-200">
+                    {analysisHistory.slice(0, 5).map((item, idx) => (
+                      <li key={idx} className="py-2 flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-gray-900">{item.supplier_name}</p>
+                          <p className="text-sm text-gray-500">{item.risk_level} Risk</p>
+                        </div>
+                        <div className="text-sm text-gray-700">{item.risk_score}/100</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
 
               {/* Recent Alerts */}
               <div className="bg-white rounded-lg shadow-sm">
