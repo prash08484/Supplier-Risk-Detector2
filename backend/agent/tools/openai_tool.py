@@ -7,6 +7,9 @@ from typing import Dict, Any, Optional, List
 import re
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 logger = logging.getLogger(__name__)
 
 class OpenAITool:

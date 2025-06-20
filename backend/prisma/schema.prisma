@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "../generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+// backend/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  url         String   @unique
+  name        String?
+  riskScore   String
+  summary     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationship to analyses
+  analyses    SupplierAnalysis[]
+}
+
+model SupplierAnalysis {
+  id           String   @id @default(cuid())
+  url          String
+  summary      String
+  riskScore    Int      // Changed to Int for better numerical operations
+  flags        String[] // Array of flags
+  analysisData Json     // JSON field for flexible analysis data
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  // Optional relationship to supplier
+  supplier     Supplier? @relation(fields: [url], references: [url])
+  
+  @@index([url])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
