@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   backend:
@@ -8,35 +8,25 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ../backend:/app
+      - ../backend:/app/backend
     env_file:
-      - ./.env
-    depends_on:
-      - db
+      - ../.env
+    working_dir: /app
+    restart: unless-stopped
 
   frontend:
     build:
       context: ..
       dockerfile: docker/Dockerfile.frontend
+      args:
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     ports:
       - "3000:3000"
+    command: npm run dev
     volumes:
       - ../frontend:/app
     env_file:
-      - ./.env
+      - ../.env
     depends_on:
       - backend
-
-  db:
-    image: postgres:16-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: your_db_password
-      POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-
-volumes:
-  db-data:
-
+    restart: unless-stopped

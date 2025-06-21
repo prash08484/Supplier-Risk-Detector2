@@ -1,13 +1,23 @@
+# docker/Dockerfile.frontend
+
 FROM node:20
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json ./
+# Install dependencies
+COPY frontend/package*.json ./
 RUN npm install
 
-COPY frontend/ .
+# Copy frontend code
+COPY frontend/ ./
 
-COPY frontend/.next ./.next
+# Build with Clerk public key
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
-CMD ["npm", "start"]
+# RUN npm run build
 
+# Expose frontend port
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

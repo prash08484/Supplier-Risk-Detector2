@@ -6,3 +6,14 @@ node_modules
 __pycache__/
 
 venv/
+
+# Ignore node/python artifacts
+node_modules/
+.next/
+.env
+__pycache__/
+*.sqlite
+*.pyc
+*.log
+*.db
+*.DS_Store
