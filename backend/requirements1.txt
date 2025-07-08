@@ -1,0 +1,46 @@
+# Core AI/ML
+langgraph==0.2.16
+langchain==0.2.16
+langchain-core==0.2.40
+langchain-openai==0.1.25
+langchain-community>=0.2.0,<0.3.0
+
+langchain-text-splitters==0.2.0
+
+# OpenAI and Vector DB
+openai>=1.40.0,<2.0.0  # Relaxed version to satisfy langchain-openai
+pinecone==3.2.2
+
+# Web Framework
+fastapi==0.109.1
+uvicorn==0.27.0
+python-multipart==0.0.6
+
+# Database
+prisma==0.11.0
+
+# Web Scraping/HTTP
+requests==2.31.0
+firecrawl-py==0.0.20
+beautifulsoup4==4.12.2
+lxml==4.9.2
+aiohttp==3.9.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.0
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.7.4
+typing-extensions==4.8.0
+structlog==23.2.0
+
+# Testing (optional)
+pytest==8.0.0
+pytest-asyncio==0.21.0
+
+# Development
+black==24.4.2
+flake8==7.0.0
+mypy==1.9.0

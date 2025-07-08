@@ -1,0 +1,49 @@
+.supplier-risk-detector {
+  padding: 20px;
+  background-color: #f7f8fa;
+}
+
+h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.total-articles,
+.sentiment-summary,
+.last-updated {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.news-feed {
+  margin-bottom: 20px;
+}
+
+.news-article {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #ffffff;
+}
+
+.refresh-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.refresh-button:hover {
+  background-color: #0056b3;
+}

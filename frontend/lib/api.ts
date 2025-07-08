@@ -1,7 +1,14 @@
-// api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+// lib/api.ts
 
-// Types for better type safety
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api/v1";
+
+import { normalizeUrl } from "./normalizeUrl"; // ✅ import helper
+
+interface SupplierIdentifier {
+  url?: string;
+  name?: string;
+}
+
 export interface SupplierAnalysisRequest {
   url: string;
   include_links?: boolean;
@@ -12,6 +19,7 @@ export interface SupplierAnalysisResponse {
   success: boolean;
   data?: {
     company_name: string;
+    normalized_url?: string; // ✅ include normalized URL returned by backend
     analysis: {
       sustainability_score: number;
       risk_level: string;
@@ -22,10 +30,31 @@ export interface SupplierAnalysisResponse {
     metadata: {
       pages_analyzed: number;
       last_updated: string;
+      url?: string; // optional raw URL
     };
   };
   error?: string;
   message?: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  sources?: string[];
+}
+
+export interface ChatResponse {
+  success: boolean;
+  answer: string;
+  sources: string[];
+  error?: string;
+}
+
+export interface VoiceResponse {
+  success: boolean;
+  text?: string;
+  audio_url?: string;
+  error?: string;
 }
 
 export interface ApiErrorData {
@@ -34,12 +63,15 @@ export interface ApiErrorData {
   details?: any;
 }
 
-// Enhanced analyze supplier function
 export const analyzeSupplier = async (
-  url: string,
+  rawUrl: string,
   options: { include_links?: boolean; max_depth?: number } = {}
 ): Promise<SupplierAnalysisResponse> => {
   try {
+    // ✅ Normalize URL before sending
+    const url = normalizeUrl(rawUrl);
+    if (!url) throw new ApiError("Invalid URL", 400);
+
     const requestBody: SupplierAnalysisRequest = {
       url,
       include_links: options.include_links ?? true,
@@ -48,10 +80,7 @@ export const analyzeSupplier = async (
 
     const response = await fetch(`${API_BASE_URL}/analyze`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Authorization: `Bearer ${getAuthToken()}`, // Add JWT token if authentication is enabled
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
     });
 
@@ -67,11 +96,7 @@ export const analyzeSupplier = async (
 
     return data;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    
-    // Handle network errors, parsing errors, etc.
+    if (error instanceof ApiError) throw error;
     throw new ApiError(
       error instanceof Error ? error.message : "An unexpected error occurred",
       0,
@@ -80,115 +105,215 @@ export const analyzeSupplier = async (
   }
 };
 
-// Get analysis status (for long-running operations)
-export const getAnalysisStatus = async (jobId: string): Promise<any> => {
+export const chatWithSupplier = async (
+  identifier: SupplierIdentifier,
+  question: string,
+  chatHistory: ChatMessage[] = []
+): Promise<ChatResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/analyze/status/${jobId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        // Authorization: `Bearer ${getAuthToken()}`,
-      },
+    const payload = {
+      question,
+      chat_history: chatHistory,
+      ...(identifier.url
+        ? { url: normalizeUrl(identifier.url) } // ✅ normalize before sending
+        : {}),
+      ...(identifier.name && !identifier.url ? { supplier_name: identifier.name } : {}),
+    };
+
+    const response = await fetch(`${API_BASE_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
       throw new ApiError(
-        errorData.message || "Failed to get analysis status",
+        data.error || "Chat failed",
         response.status,
-        errorData
+        data
       );
     }
 
-    return response.json();
+    return data;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
     throw new ApiError(
-      error instanceof Error ? error.message : "Failed to get analysis status",
+      error instanceof Error ? error.message : "Chat failed",
       0,
       error
     );
   }
 };
 
-// Get analysis history
-export const getAnalysisHistory = async (): Promise<any> => {
+export const transcribeVoice = async (audioFile: File): Promise<VoiceResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/analyze/history`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        // Authorization: `Bearer ${getAuthToken()}`,
-      },
+    const formData = new FormData();
+    formData.append("file", audioFile);
+
+    const response = await fetch(`${API_BASE_URL}/voice/transcribe`, {
+      method: "POST",
+      body: formData,
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
       throw new ApiError(
-        errorData.message || "Failed to get analysis history",
+        data.error || "Transcription failed",
         response.status,
-        errorData
+        data
       );
     }
 
-    return response.json();
+    return data;
   } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
+    if (error instanceof ApiError) throw error;
     throw new ApiError(
-      error instanceof Error ? error.message : "Failed to get analysis history",
+      error instanceof Error ? error.message : "Transcription failed",
       0,
       error
     );
   }
 };
 
-// Validate URL before sending to backend
-export const validateUrl = (url: string): boolean => {
+export const synthesizeSpeech = async (text: string): Promise<VoiceResponse> => {
   try {
-    const urlObj = new URL(url);
-    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-  } catch {
-    return false;
+    const response = await fetch(`${API_BASE_URL}/voice/synthesize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(
+        data.error || "Speech synthesis failed",
+        response.status,
+        data
+      );
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : "Speech synthesis failed",
+      0,
+      error
+    );
   }
 };
 
-// Custom error class for API errors
-class ApiError extends Error {
+export const voiceChatWithSupplier = async (
+  identifier: SupplierIdentifier,
+  audioFile: File,
+  chatHistory: ChatMessage[] = []
+): Promise<ChatResponse & { audio_url?: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", audioFile);
+
+    if (identifier.url) {
+      const normalizedUrl = normalizeUrl(identifier.url);
+      if (normalizedUrl) {
+        formData.append("url", normalizedUrl); // ✅ normalize before sending
+      } else {
+        throw new ApiError("Invalid URL", 400);
+      }
+    } else if (identifier.name) {
+      formData.append("supplier_name", identifier.name);
+    }
+
+    formData.append("chat_history", JSON.stringify(chatHistory));
+
+    const response = await fetch(`${API_BASE_URL}/voice/chat`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(
+        data.error || "Voice chat failed",
+        response.status,
+        data
+      );
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : "Voice chat failed",
+      0,
+      error
+    );
+  }
+};
+
+export const getChatHistory = async (
+  identifier: string,
+  limit: number = 20
+): Promise<ChatMessage[]> => {
+  try {
+    const normalizedIdentifier = normalizeUrl(identifier);
+
+    if (!normalizedIdentifier) {
+      throw new ApiError("Invalid identifier for chat history", 400);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/chat/history/${encodeURIComponent(normalizedIdentifier)}?limit=${limit}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new ApiError(
+        data.error || "Failed to get chat history",
+        response.status,
+        data
+      );
+    }
+
+    return data.chats || [];
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(
+      error instanceof Error ? error.message : "Failed to get chat history",
+      0,
+      error
+    );
+  }
+};
+
+export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
     public details?: any
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
-// Utility function to get auth token (implement based on your auth system)
-const getAuthToken = (): string | null => {
-  // Implement your token retrieval logic here
-  // For example, from localStorage, cookies, or a state management library
-  return localStorage.getItem('authToken');
-};
-
-// Health check endpoint
 export const healthCheck = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${API_BASE_URL}/health`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
     return response.ok;
   } catch {
     return false;
   }
 };
-
-// Export the ApiError class for use in components
-export { ApiError };

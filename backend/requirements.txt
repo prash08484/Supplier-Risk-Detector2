@@ -44,3 +44,14 @@ pytest-asyncio>=0.21.0
 black>=23.0.0
 flake8>=6.0.0
 mypy>=1.7.0
+
+# Web scraping
+beautifulsoup4>=4.12.2
+lxml>=4.9.0
+
+# Vector database
+pinecone>=3.2.2
+python-multipart
+pinecone==3.2.2
+
+langchain-community==0.0.20

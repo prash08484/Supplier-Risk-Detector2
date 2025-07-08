@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { analyzeSupplier } from '../lib/api'; // adjust path if needed
+import { analyzeSupplier } from '../lib/api';
+import { normalizeUrl } from '../lib/normalizeUrl'; // ✅ import the helper
 
 interface SupplierFormProps {
   onAnalysisComplete: (data: any) => void;
@@ -18,7 +19,13 @@ export default function SupplierForm({ onAnalysisComplete }: SupplierFormProps) 
     setLoading(true);
 
     try {
-      const result = await analyzeSupplier(url);
+      // ✅ Normalize the URL before sending it
+      const normalized = normalizeUrl(url);
+      if (!normalized) {
+        throw new Error('Invalid URL');
+      }
+
+      const result = await analyzeSupplier(normalized);
 
       if (result.success && result.data) {
         const normalizedData = {

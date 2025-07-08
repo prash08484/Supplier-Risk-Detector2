@@ -18,7 +18,7 @@ class OpenAITool:
     Specializes in risk assessment, compliance analysis, and ESG evaluation
     """
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4-turbo-preview"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4.1-mini"):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.model = model
         
@@ -30,6 +30,25 @@ class OpenAITool:
         openai.api_key = self.api_key
         self.client = openai.OpenAI(api_key=self.api_key)
     
+    async def get_chat_completion(self, messages: List[Dict[str, str]], model: Optional[str] = None) -> str:
+        """Get chat completion from OpenAI API"""
+        try:
+            response = self.client.chat.completions.create(
+                model=model or self.model,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=2000
+            )
+            
+            if response.choices and response.choices[0].message:
+                return response.choices[0].message.content
+                
+            return "No response from AI model"
+            
+        except Exception as e:
+            logger.error(f"Chat completion failed: {e}")
+            return f"Error: {str(e)}"
+
     def analyze_supplier_risks(self, content: str, prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Analyze supplier content for various risk factors
@@ -175,6 +194,8 @@ class OpenAITool:
         
         Base your analysis strictly on the provided content. If information is missing or unclear, note this in your assessment and adjust confidence accordingly.
         """
+    
+    # ... [rest of the existing methods remain unchanged] ...
     
     def analyze_financial_stability(self, content: str) -> Dict[str, Any]:
         """Focused analysis of financial stability indicators"""
