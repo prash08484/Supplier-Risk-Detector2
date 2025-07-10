@@ -18,7 +18,8 @@ interface AIChatProps {
   onClose: () => void;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api/v1";
+// const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api/v1";
+const API_BASE = "https://supplier-risk-detector2.onrender.com";
 
 export default function AIChat({ url, name, riskScore, onClose }: AIChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);

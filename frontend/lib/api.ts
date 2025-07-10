@@ -1,4 +1,5 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api/v1";
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api/v1";
+const API_BASE_URL = "https://supplier-risk-detector2.onrender.com";
 
 import { normalizeUrl } from "./normalizeUrl"; // ✅ import helper
 
