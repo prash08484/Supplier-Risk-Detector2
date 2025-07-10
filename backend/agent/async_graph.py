@@ -18,7 +18,7 @@ from agent.vector_store import get_vector_store
 logger = logging.getLogger(__name__)
 
 
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     url: str
     scraped_content: str
     analysis_result: Dict[str, Any]
@@ -27,6 +27,8 @@ class AgentState(TypedDict):
     flags: List[str]
     error: str
     step: str
+    max_depth: int        # ✅ newly added
+    limit: int            # ✅ newly added
 
 
 class AsyncSupplierRiskAgent:
@@ -58,7 +60,8 @@ class AsyncSupplierRiskAgent:
                 )
                 await asyncio.sleep(self.retry_delay * (attempt + 1))
 
-    async def run_analysis(self, url: str) -> Dict[str, Any]:
+    async def run_analysis(self, url: str, max_depth: int = 2, limit: int = 3) -> Dict[str, Any]:
+
         normalized_url = normalize_url(url)
 
         state: AgentState = {
@@ -70,6 +73,8 @@ class AsyncSupplierRiskAgent:
             "flags": [],
             "error": "",
             "step": "initialized",
+            "max_depth": max_depth,  # ✅ added
+            "limit": limit           # ✅ added
         }
 
         try:
@@ -220,9 +225,15 @@ Guidelines:
         state["step"] = "scraping"
 
         try:
+            max_depth = state.get("max_depth", 2)
+            limit = state.get("limit", 3)
+
             scraped_data = await asyncio.to_thread(
                 self.firecrawl_tool.scrape_website,
                 normalized_url,
+                include_links=True,
+                max_depth=max_depth,
+                limit=limit,
             )
 
             if not scraped_data or not scraped_data.get("success"):
@@ -237,6 +248,7 @@ Guidelines:
             logger.error("Scraping failed for %s", normalized_url, exc_info=True)
 
         return state
+
 
     async def _analyze_risks(self, state: AgentState) -> AgentState:
         logger.info("Analyzing content for risks...")

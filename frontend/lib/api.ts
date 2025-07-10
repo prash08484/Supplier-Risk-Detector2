@@ -1,5 +1,3 @@
-// lib/api.ts
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000/api/v1";
 
 import { normalizeUrl } from "./normalizeUrl"; // ✅ import helper
@@ -13,13 +11,14 @@ export interface SupplierAnalysisRequest {
   url: string;
   include_links?: boolean;
   max_depth?: number;
+  limit?: number; // ✅ Added limit support
 }
 
 export interface SupplierAnalysisResponse {
   success: boolean;
   data?: {
     company_name: string;
-    normalized_url?: string; // ✅ include normalized URL returned by backend
+    normalized_url?: string;
     analysis: {
       sustainability_score: number;
       risk_level: string;
@@ -30,7 +29,7 @@ export interface SupplierAnalysisResponse {
     metadata: {
       pages_analyzed: number;
       last_updated: string;
-      url?: string; // optional raw URL
+      url?: string;
     };
   };
   error?: string;
@@ -65,10 +64,9 @@ export interface ApiErrorData {
 
 export const analyzeSupplier = async (
   rawUrl: string,
-  options: { include_links?: boolean; max_depth?: number } = {}
+  options: { include_links?: boolean; max_depth?: number; limit?: number } = {}
 ): Promise<SupplierAnalysisResponse> => {
   try {
-    // ✅ Normalize URL before sending
     const url = normalizeUrl(rawUrl);
     if (!url) throw new ApiError("Invalid URL", 400);
 
@@ -76,6 +74,7 @@ export const analyzeSupplier = async (
       url,
       include_links: options.include_links ?? true,
       max_depth: options.max_depth ?? 2,
+      limit: options.limit ?? 3, // ✅ Add limit to request
     };
 
     const response = await fetch(`${API_BASE_URL}/analyze`, {
@@ -115,7 +114,7 @@ export const chatWithSupplier = async (
       question,
       chat_history: chatHistory,
       ...(identifier.url
-        ? { url: normalizeUrl(identifier.url) } // ✅ normalize before sending
+        ? { url: normalizeUrl(identifier.url) }
         : {}),
       ...(identifier.name && !identifier.url ? { supplier_name: identifier.name } : {}),
     };
@@ -219,7 +218,7 @@ export const voiceChatWithSupplier = async (
     if (identifier.url) {
       const normalizedUrl = normalizeUrl(identifier.url);
       if (normalizedUrl) {
-        formData.append("url", normalizedUrl); // ✅ normalize before sending
+        formData.append("url", normalizedUrl);
       } else {
         throw new ApiError("Invalid URL", 400);
       }

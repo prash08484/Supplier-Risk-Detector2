@@ -27,7 +27,7 @@ class FirecrawlTool:
         if not self.api_key:
             logger.warning("Firecrawl API key not provided. Set FIRECRAWL_API_KEY environment variable.")
 
-    def scrape_website(self, url: str, include_links: bool = True, max_depth: int = 3) -> Dict[str, Any]:
+    def scrape_website(self, url: str, include_links: bool = True, max_depth: int = 3, limit: int = 3) -> Dict[str, Any]:
         """
         Scrape a supplier website for comprehensive content analysis.
         """
@@ -39,7 +39,7 @@ class FirecrawlTool:
 
             if include_links and max_depth > 0:
                 logger.info("Attempting multi-page crawl...")
-                result = self._crawl_multiple_pages(url, max_depth)
+                result = self._crawl_multiple_pages(url, max_depth, limit)  # ✅ pass limit
 
                 if not result["success"]:
                     logger.info("Multi-page crawl failed, falling back to single page scrape.")
@@ -128,14 +128,14 @@ class FirecrawlTool:
                 "metadata": {}
             }
 
-    def _crawl_multiple_pages(self, url: str, max_depth: int) -> Dict[str, Any]:
+    def _crawl_multiple_pages(self, url: str, max_depth: int, limit: int) -> Dict[str, Any]:
         """Crawl multiple pages with fallback on failure."""
         try:
             crawl_config = {
                 "url": url,
                 "crawlerOptions": {
-                    "maxDepth": min(max_depth, 3),   # increased depth up to 3
-                    "limit": 30,                     # increased limit to 50 pages
+                    "maxDepth": min(max_depth, 3),      # ✅ ensure within Firecrawl limits
+                    "limit": min(limit, 50),            # ✅ dynamic limit
                     "allowBackwardCrawling": False,
                     "allowExternalContent": False
                 },

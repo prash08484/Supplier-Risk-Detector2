@@ -18,6 +18,7 @@ class AnalyzeRequest(BaseModel):
     url: str
     include_links: bool = True
     max_depth: int = 2
+    limit: int = 3  # 🔥 Add this
 
     @field_validator('url')
     def validate_and_normalize(cls, v):
@@ -98,15 +99,26 @@ async def analyze_supplier(request: AnalyzeRequest):
         normalized_url = normalize_url(request.url)
         logger.info(f"Starting supplier analysis for: {normalized_url}")
 
+        # ✅ Clamp values to API-safe bounds
+        max_depth = min(max(request.max_depth, 1), 3)
+        limit = min(max(request.limit, 1), 10)
+
+        # Initialize and run agent
         agent = AsyncSupplierRiskAgent()
         await agent.initialize()
-        agent_result = await agent.run_analysis(normalized_url)
+
+        agent_result = await agent.run_analysis(
+            url=normalized_url,
+            max_depth=max_depth,
+            limit=limit
+        )
 
         if not agent_result.get("success"):
             error_msg = agent_result.get("error", "Unknown error during analysis")
             logger.error(f"Agent analysis failed: {error_msg}")
             raise HTTPException(status_code=400, detail=f"Agent analysis failed: {error_msg}")
 
+        # Save result to database
         record_id = await save_supplier_data(normalized_url, agent_result)
         if record_id:
             logger.info(f"Supplier record saved. ID: {record_id}")
