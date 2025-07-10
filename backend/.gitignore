@@ -1,11 +1,40 @@
-node_modules
-# Keep environment variables out of version control
-.env
-.env.example
+# Node.js
+node_modules/
+package-lock.json
 
-/generated/prisma
+# Python
 .venv/
 __pycache__/
-/generated/prisma
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
 
-/generated/prisma
+# Environment variables
+.env
+.env.*
+
+# Prisma
+/generated/prisma/
+
+# VSCode & Editor settings (optional but recommended)
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and debugging
+*.log
+*.pid
+*.db-journal
+
+# Byte-compiled or cache files
+*.tsbuildinfo

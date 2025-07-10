@@ -147,6 +147,9 @@ class VectorStoreManager:
         filter: Optional[Dict] = None
     ) -> List[Document]:
         try:
+            if isinstance(query, bytes):
+                query = query.decode("utf-8")
+
             if not self._index:
                 raise ValueError("Vector store not initialized - call initialize() first")
 
@@ -165,7 +168,6 @@ class VectorStoreManager:
                 filter=filter
             )
 
-            # Convert all metadata fields to str
             sanitized = []
             for doc in results:
                 meta = {k: (v.decode("utf-8") if isinstance(v, bytes) else str(v)) for k, v in doc.metadata.items()}
