@@ -8,7 +8,7 @@ langchain-community==0.3.27
 langchain-text-splitters==0.3.8
 
 # OpenAI and Vector DB
-openai>=1.40.0,<2.0.0  # Relaxed version to satisfy langchain-openai
+openai==1.93.0  # Relaxed version to satisfy langchain-openai
 pinecone==3.2.2
 
 # Web Framework
