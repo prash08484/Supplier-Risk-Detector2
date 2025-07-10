@@ -102,8 +102,19 @@ class VectorStoreManager:
                         "source": normalize_url(doc.get("source", normalized_url)) if doc.get("source") else normalized_url,
                         **doc.get("metadata", {})
                     }
-                    # Convert all metadata to str
-                    metadata = {k: (v.decode("utf-8") if isinstance(v, bytes) else str(v)) for k, v in metadata_raw.items()}
+
+                    # Safely convert all metadata to str
+                    metadata = {}
+                    for k, v in metadata_raw.items():
+                        if k is None:
+                            continue
+                        key = k.decode("utf-8") if isinstance(k, bytes) else str(k)
+                        if v is None:
+                            metadata[key] = ""
+                        elif isinstance(v, bytes):
+                            metadata[key] = v.decode("utf-8")
+                        else:
+                            metadata[key] = str(v)
 
                     docs.append(
                         Document(
@@ -170,7 +181,18 @@ class VectorStoreManager:
 
             sanitized = []
             for doc in results:
-                meta = {k: (v.decode("utf-8") if isinstance(v, bytes) else str(v)) for k, v in doc.metadata.items()}
+                meta = {}
+                for k, v in doc.metadata.items():
+                    if k is None:
+                        continue
+                    key = k.decode("utf-8") if isinstance(k, bytes) else str(k)
+                    if v is None:
+                        meta[key] = ""
+                    elif isinstance(v, bytes):
+                        meta[key] = v.decode("utf-8")
+                    else:
+                        meta[key] = str(v)
+
                 sanitized.append(Document(page_content=doc.page_content, metadata=meta))
 
             return sanitized

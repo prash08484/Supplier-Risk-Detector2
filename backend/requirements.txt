@@ -1,11 +1,12 @@
 # Core AI/ML
 langgraph==0.2.16
-langchain==0.3.26
-langchain-core==0.2.43
+langchain==0.2.16
+langchain-core==0.2.40
 langchain-openai==0.1.25
-langchain-community==0.3.27
+langchain-community>=0.2.0,<0.3.0
 
-langchain-text-splitters==0.3.8
+langchain-text-splitters==0.2.0
+
 
 # OpenAI and Vector DB
 openai==1.93.0  # Relaxed version to satisfy langchain-openai
@@ -33,7 +34,8 @@ numpy==1.26.0
 # Utilities
 python-dotenv==1.0.0
 pydantic==2.7.4
-typing-extensions==4.8.0
+typing-extensions>=4.11
+
 structlog==23.2.0
 
 # Testing (optional)
